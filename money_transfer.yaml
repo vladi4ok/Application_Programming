@@ -1,0 +1,360 @@
+openapi: 3.0.0
+info:
+  description: |
+    This is a sample Money transfer server.
+  version: "1.0.0"
+  title: Money Transfer Service
+servers:
+  # Added by API Auto Mocking Plugin
+  #- description: SwaggerHub API Auto Mocking
+  #  url: https://virtserver.swaggerhub.com/kseniiateter/MoneyTransfer/1.0.0
+  - url: 'https://moneytransfer.swagger.io/v2'
+tags:
+  - name: user
+    description: Operations about user
+  - name: account
+    description: Access to user's account
+  - name: transaction
+    description: Money transaction between accounts
+paths:
+  /user:
+    post:
+      tags:
+        - user
+      summary: Create user
+      description: This can only be done by the logged in user.
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+        description: Created user object
+        required: true
+      responses:
+        default:
+          description: successful operation
+          content: {}
+      x-codegen-request-body-name: body
+  /user/login:
+    get:
+      tags:
+        - user
+      summary: Logs user into the system
+      operationId: loginUser
+      parameters:
+        - name: username
+          in: query
+          description: The username for login
+          required: true
+          schema:
+            type: string
+        - name: password
+          in: query
+          description: The password for login
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          headers:
+            X-Rate-Limit:
+              description: calls per hour allowed by the user
+              schema:
+                type: integer
+                format: int32
+            X-Expires-After:
+              description: date in UTC when token expires
+              schema:
+                type: string
+                format: date-time
+          content:
+            application/json:
+              schema:
+                type: string
+            application/xml:
+              schema:
+                type: string
+        400:
+          description: Invalid username/password supplied
+          content: {}
+  /user/logout:
+    get:
+      tags:
+        - user
+      summary: Logs out current logged in user session
+      operationId: logoutUser
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  /user/{username}:
+    get:
+      tags:
+      - user
+      summary: Get user by user name
+      operationId: getUserByName
+      parameters:
+      - name: username
+        in: path
+        description: 'The name that needs to be fetched'
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/User'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Invalid username supplied
+          content: {}
+        404:
+          description: User not found
+          content: {}
+    put:
+      tags:
+      - user
+      summary: Updated user
+      operationId: updateUser
+      parameters:
+      - name: username
+        in: path
+        description: name that need to be updated
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Updated user object
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      responses:
+        400:
+          description: Invalid user supplied
+          content: {}
+        404:
+          description: User not found
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+      - ApiKeyAuth: []
+    delete:
+      tags:
+        - user
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+        - name: username
+          in: path
+          description: The name that needs to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        400:
+          description: Invalid username supplied
+        404:
+          description: User not found
+      security:
+      - ApiKeyAuth: []
+  /account/create:
+    post:
+      tags:
+        - account
+      summary: Create a new account
+      description: Create a new account using fields provided
+      operationId: addAccount
+      responses:
+        200:
+          description: success operation
+        400:
+          description: you already have an account
+      requestBody:
+        $ref: '#/components/requestBodies/Account'
+      security:
+      - ApiKeyAuth: []
+  /account/{accountNumber}:
+    get:
+      tags:
+        - account
+      summary: Find a specified account
+      description: Find a specified account by given account number
+      operationId: getAccount
+      parameters:
+        - name: accountNumber
+          in: path
+          description: Account number that needs to be fetched
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+        400:
+          description: Invalid number supplied
+          content: {}
+        404:
+          description: Account not found
+          content: {}
+      security:
+      - ApiKeyAuth: []
+    put:
+      tags:
+        - account
+      summary: Update account balance
+      operationId: updateAccount
+      parameters:
+      - name: accountNumber
+        in: path
+        description: account that need to be updated
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Updated account object
+        content:
+          '*/*':
+            schema:
+              $ref: '#/components/schemas/Account'
+        required: true
+      responses:
+        400:
+          description: Invalid account supplied
+          content: {}
+        404:
+          description: Account not found
+          content: {}
+      x-codegen-request-body-name: body
+      security:
+      - ApiKeyAuth: []
+    delete:
+      tags:
+        - account
+      summary: Delete a specific account
+      description: Delete a specific account by given number
+      operationId: deleteAccount
+      parameters:
+        - name: accountNumber
+          in: path
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Account'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        400:
+          description: Invalid number supplied
+          content: {}
+        404:
+          description: Account not found
+          content: {}
+      security:
+      - ApiKeyAuth: []
+  /transfer/money:
+    post:
+      tags:
+        - transaction
+      summary: Perform a money transfer
+      description: Perform a money transaction between two different customer accounts
+      responses:
+        200:
+          description: Operation success
+        400:
+          description: Invalid resource supplied
+      requestBody:
+        $ref: '#/components/requestBodies/Transfer'
+      security:
+      - ApiKeyAuth: []
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userName:
+          type: string
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        emailAddress:
+          type: string
+      xml:
+        name: User
+    Account:
+      type: object
+      properties:
+        accountNumber:
+          type: integer
+        userName:
+          type: string
+        balance:
+          type: integer
+        currencyCode:
+          type: string
+    Transfer:
+      type: object
+      properties:
+        currencyCode:
+          type: string
+        amount:
+          type: integer
+        fromAccountNumber:
+          type: integer
+        toAccountNumber:
+          type: integer
+
+  requestBodies:
+    User:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/User'
+      description: User object that needs to be added on the bank
+      required: true
+    Account:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Account'
+      description: Account object that needs to be added on the bank
+    Transfer:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Transfer'
+  securitySchemes:
+    ApiKeyAuth:        # arbitrary name for the security scheme
+      type: apiKey
+      in: header       # can be "header", "query" or "cookie"
+      name: X-API-KEY
