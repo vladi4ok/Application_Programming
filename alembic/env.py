@@ -18,7 +18,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("DB_URL", "mysql+mysqlconnector://root:password@localhost/baza_pp")
+    os.getenv("DB_URL", "mysql+mysqlconnector://root:sqlLp9lp@localhost/baza_pp")
 )
 
 # Interpret the config file for Python logging.
