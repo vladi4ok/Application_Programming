@@ -9,7 +9,6 @@ from alembic import context
 import os
 import sys
 
-
 from model import Base
 
 # this is the Alembic Config object, which provides
@@ -18,7 +17,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("DB_URL", "mysql+mysqlconnector://root:sqlLp9lp@localhost/baza_pp")
+    os.getenv("DB_URL", "mysql+mysqlconnector://root:root@localhost/money_transfer")
 )
 
 # Interpret the config file for Python logging.
@@ -30,6 +29,7 @@ fileConfig(config.config_file_name)
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = [Base.metadata]
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -10,6 +10,7 @@ def create_entry(model_class, *, commit=True, **kwargs):
         session.commit()
     return entry
 
+
 # user methods
 
 
@@ -34,16 +35,16 @@ def update_user(entry, *, commit=True, **kwargs):
         session.commit()
     return entry
 
+
 def return_account_num_objects(model_class, user_name, **kwargs):
     session = Session()
     # user_to_del = session.query(User).filter_by(UserName=user_name).one()
     return session.query(model_class).filter_by(UserName=user_name).all()
 
 
-
 def delete_user_accounts(model_class, nick, **kwargs):
     session = Session()
-    #session.query(model_class).filter_by(UserName=nick).delete()
+    # session.query(model_class).filter_by(UserName=nick).delete()
     all_acc = session.query(model_class).filter_by(UserName=nick).all()
 
 
@@ -71,11 +72,9 @@ def update_account(entry, *, commit=True, **kwargs):
         session.commit()
     return entry
 
+
 # transfer methods
 
 def get_transfer(model_class, t_id, **kwargs):
     session = Session()
     return session.query(model_class).filter_by(idTransfer=t_id).one()
-
-
-
