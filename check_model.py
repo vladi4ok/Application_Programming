@@ -20,8 +20,9 @@ Transfer2 = Transfer(amount = 500, currencyCode = 'UAH', fromAccountNumber = 3, 
 session.add(user1)
 session.add(user2)
 session.add(user3)
-
+session.commit()
 session.add(Account1)
+session.commit()
 session.add(Account2)
 session.add(Account3)
 

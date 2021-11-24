@@ -15,7 +15,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
 
 
-DB_URL = "mysql+mysqlconnector://root:password@localhost/baza_pp"
+DB_URL = "mysql+mysqlconnector://root:sqlLp9lp@localhost:3306/baza_pp"
 
 engine = create_engine(DB_URL)
 
@@ -29,12 +29,16 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = "User"
 
+
     UserName = Column(String(length=45), primary_key=True, unique=True)
     firstName = Column(String(length=45), nullable=False)
     lastName = Column(String(length=45), nullable=False)
     email = Column(String(length=45), nullable=False, unique=True)
     phone = Column(String(length=45), nullable=False, unique=True)
-    password = Column(String(length=45), nullable=False)
+    password = Column(String(length=100), nullable=False)
+
+    # to implement cascade deleting
+    #account = relationship("Account", cascade="all,delete", backref="user")
 
     def __str__(self):
         return f"User ID : {self.UserName}\n" \
@@ -63,6 +67,10 @@ class Transfer(Base):
     currencyCode = Column(String(length=45), nullable=False)
     fromAccountNumber = Column(Integer, ForeignKey("Account.AccountNumber"), nullable=False)
     toAccountNumber = Column(Integer, ForeignKey("Account.AccountNumber"), nullable=False)
+
+    # добавив on delete щоб реалізувати каскадне видалення (вирішив зробити через тригери)
+    #fromAccountNumber = Column(Integer, ForeignKey("Account.AccountNumber", ondelete='CASCADE'), nullable=False)
+    #toAccountNumber = Column(Integer, ForeignKey("Account.AccountNumber", ondelete='CASCADE'), nullable=False)
 
     # Account = orm.relationship("Account")
     Account = orm.relationship("Account", foreign_keys=[fromAccountNumber])
