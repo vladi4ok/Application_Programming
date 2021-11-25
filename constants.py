@@ -4,6 +4,11 @@ USER_PATH = '/user'
 ACCOUNT_PATH = '/account'
 TRANSFER_PATH = '/transfer'
 
+# auth
+BAD_USERNAME = 'Username is not correct! User not found or does not exist.'
+BAD_PASSWORD = 'Wrong password!'
+ACCESS_DENIED = 'Access denied!'
+
 # user messages
 USER_ALREADY_EXISTS = 'User already exists! Please, provide unique id'
 USER_CREATED = 'User`s been successfully created!'
