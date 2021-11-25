@@ -7,6 +7,7 @@ from model import *
 import bcrypt
 from constants import *
 from decimal import Decimal
+from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:root@localhost:3306/money_transfer'
@@ -37,7 +38,25 @@ def hello_world():
     return "<p>Hello World 1</p>"
 
 
+# Lab-8
+auth = HTTPBasicAuth()
+
+
+@auth.verify_password
+def user_auth(username, password):
+    session = Session()
+    try:
+        user = session.query(User).filter_by(UserName=username).one()
+    except:
+        return jsonify(BAD_USERNAME), 404
+    if bcrypt.checkpw(password.encode('utf8'), user.password.encode('utf8')):
+        return username, 200
+    else:
+        return jsonify(BAD_PASSWORD), 401
+
+
 # USER
+
 @app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['GET'])
 def get_user_by_nick(UserName):
     try:
@@ -70,7 +89,15 @@ def create_user():
 
 
 @app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['DELETE'])
+@auth.login_required
 def delete_user_by_nick(UserName):
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if auth_rez[0] != UserName:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
         db_utils.get_user(User, UserName)
     except:
@@ -81,7 +108,15 @@ def delete_user_by_nick(UserName):
 
 
 @app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['PUT'])
+@auth.login_required
 def update_user(UserName):
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    if auth_rez[0] != UserName:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
         user_data = UserSchema().load(request.json, partial=True)
         if user_data.get('UserName'):
@@ -114,28 +149,49 @@ def update_user(UserName):
 
 # ACCOUNT
 @app.route(BASE_PATH + ACCOUNT_PATH + '/<AccountNumber>', methods=['GET'])
+@auth.login_required
 def get_account_num(AccountNumber):
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
     try:
         account = db_utils.get_account(Account, AccountNumber)
     except:
         return jsonify(ACCOUNT_NOT_FOUND), 404
 
+    if auth_rez[0] != account.UserName:
+        return jsonify(ACCESS_DENIED), 403
+
     return jsonify({'account': AccountSchema().dump(account)})
 
 
 @app.route(BASE_PATH + ACCOUNT_PATH + '/<AccountNumber>', methods=['DELETE'])
+@auth.login_required
 def delete_account_num(AccountNumber):
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
     try:
-        db_utils.get_account(Account, AccountNumber)
+        account = db_utils.get_account(Account, AccountNumber)
     except:
         return jsonify(ACCOUNT_NOT_FOUND), 404
 
-    account = db_utils.delete_account(Account, AccountNumber)
+    if auth_rez[0] != account.UserName:
+        return jsonify(ACCESS_DENIED), 403
+
+    db_utils.delete_account(Account, AccountNumber)
     return jsonify(ACCOUNT_DELETED), 200
 
 
 @app.route(BASE_PATH + ACCOUNT_PATH + '/<AccountNumber>', methods=['PUT'])
+@auth.login_required
 def update_account(AccountNumber):
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
     try:
         account_data = AccountSchema().load(request.json, partial=True)
 
@@ -157,6 +213,9 @@ def update_account(AccountNumber):
         except:
             return jsonify(ACCOUNT_NOT_FOUND), 404
 
+        if auth_rez[0] != account.UserName:
+            return jsonify(ACCESS_DENIED), 403
+
         db_utils.update_account(account, **account_data)
 
         return jsonify(ACCOUNT_UPDATED), 200
@@ -165,7 +224,14 @@ def update_account(AccountNumber):
 
 
 @app.route(BASE_PATH + ACCOUNT_PATH, methods=['POST'])
+@auth.login_required
 def create_account():
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+    if auth_rez[0] != request.json['UserName']:
+        return jsonify(ACCESS_DENIED), 403
+
     try:
         account_data = AccountSchema().load(request.json)
         try:
@@ -181,13 +247,27 @@ def create_account():
 
 # TRANSFER
 @app.route(BASE_PATH + TRANSFER_PATH, methods=['POST'])
+@auth.login_required
 def create_transfer():
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
     transfer_data = TransferSchema().load(request.json)
     try:
         if db_utils.get_transfer(Transfer, transfer_data.get('idTransfer')):
             return jsonify(TRANSFER_ALREADY_EXISTS), 409
     except:
         pass
+
+    session = Session()
+    try:
+        acc = session.query(Account).filter_by(AccountNumber=transfer_data.get('fromAccountNumber')).one()
+        if auth_rez[0] != acc.UserName:
+            return jsonify(ACCESS_DENIED), 403
+    except:
+        pass
+
     try:
         if transfer_data.get('fromAccountNumber') == transfer_data.get('toAccountNumber'):
             return jsonify(TRANSFER_USER_DUBLICATION), 400
@@ -224,7 +304,6 @@ def create_transfer():
     db_utils.create_entry(Transfer, **transfer_data)
 
     return jsonify(TRANSFER_CREATED), 201
-
 
 
 @app.route(BASE_PATH + TRANSFER_PATH + '/<idTransfer>', methods=['GET'])
