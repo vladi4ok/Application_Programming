@@ -21,3 +21,4 @@ marshmallow_sqlalchemy
 bcrypt
 flask_marshmallow
 flask_httpauth
+coverage

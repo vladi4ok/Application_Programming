@@ -9,7 +9,7 @@ from alembic import context
 import os
 import sys
 
-from model import Base
+from model import Base, SQLALCHEMY_DATABASE_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,7 +17,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("DB_URL", "mysql+mysqlconnector://root:root@localhost/money_transfer")
+    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql://root:mySQL.kt.1502@localhost:3306/money_transfer")
 )
 
 # Interpret the config file for Python logging.

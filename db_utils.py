@@ -13,7 +13,6 @@ def create_entry(model_class, *, commit=True, **kwargs):
 
 # user methods
 
-
 def get_user(model_class, nick, **kwargs):
     session = Session()
     return session.query(model_class).filter_by(UserName=nick).one()

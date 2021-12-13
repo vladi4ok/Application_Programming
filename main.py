@@ -1,7 +1,6 @@
-from flask import Flask, jsonify, request, make_response
+from flask import Flask, jsonify, request
 from flask_marshmallow import Marshmallow
-from marshmallow import Schema, fields
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow import Schema
 import db_utils
 from model import *
 import bcrypt
@@ -10,7 +9,8 @@ from decimal import Decimal
 from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:root@localhost:3306/money_transfer'
+auth = HTTPBasicAuth()
+# app.config['SQLALCHEMY_DATABASE_URL'] = "mysql+mysqlconnector://root:mySQL.kt.1502@localhost:3306/money_transfer"
 
 ma = Marshmallow(app)
 
@@ -38,10 +38,6 @@ def hello_world():
     return "<p>Hello World 1</p>"
 
 
-# Lab-8
-auth = HTTPBasicAuth()
-
-
 @auth.verify_password
 def user_auth(username, password):
     session = Session()
@@ -56,17 +52,6 @@ def user_auth(username, password):
 
 
 # USER
-
-@app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['GET'])
-def get_user_by_nick(UserName):
-    try:
-        user = db_utils.get_user(User, UserName)
-    except:
-        return jsonify(USER_NOT_FOUND), 404
-
-    return jsonify({'user': UserSchema().dump(user)})
-
-
 @app.route(BASE_PATH + USER_PATH, methods=['POST'])
 def create_user():
     try:
@@ -88,6 +73,25 @@ def create_user():
         return jsonify(SOMETHING_WENT_WRONG), 400
 
 
+@app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['GET'])
+@auth.login_required
+def get_user_by_nick(UserName):
+    auth_rez = auth.current_user()
+    if auth_rez[1] != 200:
+        return auth_rez
+
+    try:
+        user = db_utils.get_user(User, UserName)
+    except:
+        return jsonify(USER_NOT_FOUND), 404
+
+    if auth_rez[0] != UserName:
+        return jsonify(ACCESS_DENIED), 403
+
+
+    return jsonify({'user': UserSchema().dump(user)})
+
+
 @app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['DELETE'])
 @auth.login_required
 def delete_user_by_nick(UserName):
@@ -95,13 +99,13 @@ def delete_user_by_nick(UserName):
     if auth_rez[1] != 200:
         return auth_rez
 
-    if auth_rez[0] != UserName:
-        return jsonify(ACCESS_DENIED), 403
-
     try:
         db_utils.get_user(User, UserName)
     except:
         return jsonify(USER_NOT_FOUND), 404
+
+    if auth_rez[0] != UserName:
+        return jsonify(ACCESS_DENIED), 403
 
     db_utils.delete_user(User, UserName)
     return jsonify(USER_DELETED), 200
@@ -110,41 +114,79 @@ def delete_user_by_nick(UserName):
 @app.route(BASE_PATH + USER_PATH + '/<UserName>', methods=['PUT'])
 @auth.login_required
 def update_user(UserName):
+    session = Session()
     auth_rez = auth.current_user()
-    if auth_rez[1] != 200:
-        return auth_rez
+
+    try:
+        session.query(User).filter_by(UserName=UserName).one()
+    except:
+        return jsonify(USER_NOT_FOUND), 404
 
     if auth_rez[0] != UserName:
         return jsonify(ACCESS_DENIED), 403
 
     try:
-        user_data = UserSchema().load(request.json, partial=True)
-        if user_data.get('UserName'):
+        if request.json['UserName']:
             return jsonify(CANT_CHANGE_ID), 400
     except:
         pass
     try:
-        try:
-            user = db_utils.get_user(User, UserName)
-        except:
-            return jsonify(USER_NOT_FOUND), 404
+        update_request = request.get_json()
 
-        if user_data.get('password'):
+        user = session.query(User).filter_by(UserName=UserName).one()
+
+        if update_request.get('password'):
             # password hashing ------------------------------------
-            passwd = user_data.get('password')
+            passwd = update_request.get('password')
             b = bytes(passwd, 'utf-8')
             hashed_password = bcrypt.hashpw(b, bcrypt.gensalt())
-            user_data['password'] = hashed_password
+            update_request['password'] = hashed_password
             # -----------------------------------------------------
 
-        updated_user = db_utils.update_user(user, **user_data)
+        updated_user = db_utils.update_user(user, **update_request)
 
-        if updated_user == None:
+        if updated_user is None:
             return jsonify(SOMETHING_WENT_WRONG), 400
-
+        session.commit()
         return jsonify(USER_UPDATED), 200
     except:
         return jsonify(SOMETHING_WENT_WRONG), 400
+
+    # auth_rez = auth.current_user()
+    # if auth_rez[1] != 200:
+    #     return auth_rez
+    #
+    # if auth_rez[0] != UserName:
+    #     return jsonify(ACCESS_DENIED), 403
+    #
+    # try:
+    #     user_data = UserSchema().load(request.json, partial=True)
+    #     if user_data.get('UserName'):
+    #         return jsonify(CANT_CHANGE_ID), 400
+    # except:
+    #     pass
+    # try:
+    #     try:
+    #         user = db_utils.get_user(User, UserName)
+    #     except:
+    #         return jsonify(USER_NOT_FOUND), 404
+    #
+    #     if user_data.get('password'):
+    #         # password hashing ------------------------------------
+    #         passwd = user_data.get('password')
+    #         b = bytes(passwd, 'utf-8')
+    #         hashed_password = bcrypt.hashpw(b, bcrypt.gensalt())
+    #         user_data['password'] = hashed_password
+    #         # -----------------------------------------------------
+    #
+    #     updated_user = db_utils.update_user(user, **user_data)
+    #
+    #     if updated_user is not None:
+    #         return jsonify(SOMETHING_WENT_WRONG), 400
+    #
+    #     return jsonify(USER_UPDATED), 200
+    # except:
+    #     return jsonify(SOMETHING_WENT_WRONG), 400
 
 
 # ACCOUNT
