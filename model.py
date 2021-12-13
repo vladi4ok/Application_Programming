@@ -1,6 +1,3 @@
-import os
-import sys
-
 from sqlalchemy import (
     Column,
     Integer,
@@ -13,9 +10,9 @@ from sqlalchemy import orm, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
-DB_URL = "mysql+mysqlconnector://root:root@localhost:3306/money_transfer"
 
-engine = create_engine(DB_URL)
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mySQL.kt.1502@localhost:3306/money_transfer"
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionFactory = sessionmaker(bind=engine)
 
