@@ -10,11 +10,11 @@ from flask_httpauth import HTTPBasicAuth
 
 app = Flask(__name__)
 auth = HTTPBasicAuth()
-# app.config['SQLALCHEMY_DATABASE_URL'] = "mysql+mysqlconnector://root:mySQL.kt.1502@localhost:3306/money_transfer"
 
 ma = Marshmallow(app)
 
 
+# Validation
 class UserSchema(Schema):
     class Meta:
         model = User
@@ -33,11 +33,7 @@ class TransferSchema(Schema):
         fields = ('idTransfer', 'amount', 'currencyCode', 'fromAccountNumber', 'toAccountNumber')
 
 
-@app.route(BASE_PATH + '/hello-world-1')
-def hello_world():
-    return "<p>Hello World 1</p>"
-
-
+# basic auth
 @auth.verify_password
 def user_auth(username, password):
     session = Session()
@@ -87,7 +83,6 @@ def get_user_by_nick(UserName):
 
     if auth_rez[0] != UserName:
         return jsonify(ACCESS_DENIED), 403
-
 
     return jsonify({'user': UserSchema().dump(user)})
 
@@ -151,42 +146,6 @@ def update_user(UserName):
         return jsonify(USER_UPDATED), 200
     except:
         return jsonify(SOMETHING_WENT_WRONG), 400
-
-    # auth_rez = auth.current_user()
-    # if auth_rez[1] != 200:
-    #     return auth_rez
-    #
-    # if auth_rez[0] != UserName:
-    #     return jsonify(ACCESS_DENIED), 403
-    #
-    # try:
-    #     user_data = UserSchema().load(request.json, partial=True)
-    #     if user_data.get('UserName'):
-    #         return jsonify(CANT_CHANGE_ID), 400
-    # except:
-    #     pass
-    # try:
-    #     try:
-    #         user = db_utils.get_user(User, UserName)
-    #     except:
-    #         return jsonify(USER_NOT_FOUND), 404
-    #
-    #     if user_data.get('password'):
-    #         # password hashing ------------------------------------
-    #         passwd = user_data.get('password')
-    #         b = bytes(passwd, 'utf-8')
-    #         hashed_password = bcrypt.hashpw(b, bcrypt.gensalt())
-    #         user_data['password'] = hashed_password
-    #         # -----------------------------------------------------
-    #
-    #     updated_user = db_utils.update_user(user, **user_data)
-    #
-    #     if updated_user is not None:
-    #         return jsonify(SOMETHING_WENT_WRONG), 400
-    #
-    #     return jsonify(USER_UPDATED), 200
-    # except:
-    #     return jsonify(SOMETHING_WENT_WRONG), 400
 
 
 # ACCOUNT
@@ -360,18 +319,3 @@ def get_transfer(idTransfer):
 
 if __name__ == '__main__':
     app.run()
-
-# waitress-serve --host 127.0.0.1 --port=5000 --call "main:create_app"
-# http://127.0.0.1:5000/api/v1/hello-world-1
-# venv\Scripts\activate
-# curl -v -XGET http://localhost:5000/api/v1/hello-world-1
-
-# http://127.0.0.1:5000/api/v1/user/shcherbii_ostap
-# http://127.0.0.1:5000/api/v1/user/ivanenko_ivan
-# http://127.0.0.1:5000/api/v1/user/user_name
-
-# POSTED: (UserName,email,phone -> unique)
-# {"UserName":"vikusia","email":"vikal3@gmail.com","firstName":"Vika","lastName":"Mood","password":"12345","phone":"+380931040257"}
-# {"UserName":"yura","email":"yura3@gmail.com","firstName":"Yura","lastName":"Yanio","password":"123j45","phone":"+380931048257"}
-# {"UserName":"yura2","email":"yura2003@gmail.com","firstName":"Yura","lastName":"Yanio","password":"123j45","phone":"+380931048258"}
-# {"UserName": "ivanko","email": "ivik2003@gmail.com","firstName": "Ivan","lastName": "Solomchak","password": "92j3j45","phone": "+380931048259"}

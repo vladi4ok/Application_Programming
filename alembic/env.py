@@ -17,7 +17,7 @@ config = context.config
 
 config.set_main_option(
     "sqlalchemy.url",
-    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql://root:mySQL.kt.1502@localhost:3306/money_transfer")
+    os.getenv("SQLALCHEMY_DATABASE_URL", "mysql://root:root@localhost:3306/money_transfer")
 )
 
 # Interpret the config file for Python logging.
