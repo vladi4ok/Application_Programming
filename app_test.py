@@ -219,13 +219,6 @@ class TestUser(MyTestCase):
         response = self.client.delete('api/v1/user/user1', headers=self.get_auth_headers(self.user_2_credentials))
         self.assertEqual(response.status_code, 403)
 
-    # def test_delete_not_existing_user(self):
-    #     self.clear_user_db()
-    #     self.create_all_users()
-    #
-    #     response = self.client.delete('api/v1/user/111', headers=self.get_auth_headers(self.user_1_credentials))
-    #     self.assertEqual(response.status_code, 404)
-
 
 class TestAccount(MyTestCase):
     def test_create_account(self):
@@ -398,14 +391,6 @@ class TestTransfer(MyTestCase):
         response = self.client.get('api/v1/transfer/1',
                                    headers=self.get_auth_headers(self.user_1_credentials))
         self.assertEqual(response.status_code, 200)
-        # self.assertEqual(response.json, [
-        #     {
-        #         "idTransfer": 1,
-        #         "amount": 100,
-        #         "currencyCode": 'UAH',
-        #         "fromAccountNumber": 1,
-        #         "toAccountNumber": 2
-        #     }])
 
     def test_get_transfer_by_not_existing_id(self):
         self.clear_transfer_db()

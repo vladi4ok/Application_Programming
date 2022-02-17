@@ -10,8 +10,7 @@ from sqlalchemy import orm, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship
 
-
-SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:mySQL.kt.1502@localhost:3306/money_transfer"
+SQLALCHEMY_DATABASE_URL = "mysql+mysqlconnector://root:root@localhost:3306/money_transfer"
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionFactory = sessionmaker(bind=engine)
@@ -69,6 +68,3 @@ class Transfer(Base):
     # Account = orm.relationship("Account")
     Account = orm.relationship("Account", foreign_keys=[fromAccountNumber])
     Account = orm.relationship("Account", foreign_keys=[toAccountNumber])
-
-# alembic revision --autogenerate -m "First"
-# alembic upgrade head
